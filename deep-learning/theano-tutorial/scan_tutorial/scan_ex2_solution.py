@@ -14,8 +14,7 @@ def sample_from_pvect(pvect):
     and return its index.
     """
     onehot_sample = rng.multinomial(n=1, pvals=pvect)
-    sample = onehot_sample.argmax()
-    return sample
+    return onehot_sample.argmax()
 
 
 def set_p_to_zero(pvect, i):
@@ -46,5 +45,5 @@ f = theano.function(inputs=[probabilities, nb_samples],
 
 # Testing the function
 test_probs = np.asarray([0.6, 0.3, 0.1], dtype=theano.config.floatX)
-for i in range(10):
+for _ in range(10):
     print(f(test_probs, 2))

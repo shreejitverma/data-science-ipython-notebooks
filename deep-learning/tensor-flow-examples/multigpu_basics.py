@@ -31,10 +31,7 @@ c1 = []
 c2 = []
 
 def matpow(M, n):
-    if n < 1: #Abstract cases where n < 1
-        return M
-    else:
-        return tf.matmul(M, matpow(M, n-1))
+    return M if n < 1 else tf.matmul(M, matpow(M, n-1))
 
 '''
 Single GPU computing

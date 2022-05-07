@@ -61,9 +61,8 @@ class DataSet(object):
     if fake_data:
       self._num_examples = 10000
     else:
-      assert images.shape[0] == labels.shape[0], (
-          "images.shape: %s labels.shape: %s" % (images.shape,
-                                                 labels.shape))
+      assert (images.shape[0] == labels.shape[0]
+              ), f"images.shape: {images.shape} labels.shape: {labels.shape}"
       self._num_examples = images.shape[0]
       # Convert shape from [num examples, rows, columns, depth]
       # to [num examples, rows*columns] (assuming depth == 1)

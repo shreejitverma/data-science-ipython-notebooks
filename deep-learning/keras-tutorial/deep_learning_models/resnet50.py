@@ -40,24 +40,27 @@ def identity_block(input_tensor, kernel_size, filters, stage, block):
         block: 'a','b'..., current block label, used for generating layer names
     '''
     nb_filter1, nb_filter2, nb_filter3 = filters
-    if K.image_dim_ordering() == 'tf':
-        bn_axis = 3
-    else:
-        bn_axis = 1
-    conv_name_base = 'res' + str(stage) + block + '_branch'
-    bn_name_base = 'bn' + str(stage) + block + '_branch'
+    bn_axis = 3 if K.image_dim_ordering() == 'tf' else 1
+    conv_name_base = f'res{str(stage)}{block}_branch'
+    bn_name_base = f'bn{str(stage)}{block}_branch'
 
-    x = Convolution2D(nb_filter1, 1, 1, name=conv_name_base + '2a')(input_tensor)
-    x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2a')(x)
+    x = Convolution2D(nb_filter1, 1, 1, name=f'{conv_name_base}2a')(input_tensor)
+    x = BatchNormalization(axis=bn_axis, name=f'{bn_name_base}2a')(x)
     x = Activation('relu')(x)
 
-    x = Convolution2D(nb_filter2, kernel_size, kernel_size,
-                      border_mode='same', name=conv_name_base + '2b')(x)
-    x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2b')(x)
+    x = Convolution2D(
+        nb_filter2,
+        kernel_size,
+        kernel_size,
+        border_mode='same',
+        name=f'{conv_name_base}2b',
+    )(x)
+
+    x = BatchNormalization(axis=bn_axis, name=f'{bn_name_base}2b')(x)
     x = Activation('relu')(x)
 
-    x = Convolution2D(nb_filter3, 1, 1, name=conv_name_base + '2c')(x)
-    x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2c')(x)
+    x = Convolution2D(nb_filter3, 1, 1, name=f'{conv_name_base}2c')(x)
+    x = BatchNormalization(axis=bn_axis, name=f'{bn_name_base}2c')(x)
 
     x = merge([x, input_tensor], mode='sum')
     x = Activation('relu')(x)
@@ -78,29 +81,36 @@ def conv_block(input_tensor, kernel_size, filters, stage, block, strides=(2, 2))
     And the shortcut should have subsample=(2,2) as well
     '''
     nb_filter1, nb_filter2, nb_filter3 = filters
-    if K.image_dim_ordering() == 'tf':
-        bn_axis = 3
-    else:
-        bn_axis = 1
-    conv_name_base = 'res' + str(stage) + block + '_branch'
-    bn_name_base = 'bn' + str(stage) + block + '_branch'
+    bn_axis = 3 if K.image_dim_ordering() == 'tf' else 1
+    conv_name_base = f'res{str(stage)}{block}_branch'
+    bn_name_base = f'bn{str(stage)}{block}_branch'
 
-    x = Convolution2D(nb_filter1, 1, 1, subsample=strides,
-                      name=conv_name_base + '2a')(input_tensor)
-    x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2a')(x)
+    x = Convolution2D(
+        nb_filter1, 1, 1, subsample=strides, name=f'{conv_name_base}2a'
+    )(input_tensor)
+
+    x = BatchNormalization(axis=bn_axis, name=f'{bn_name_base}2a')(x)
     x = Activation('relu')(x)
 
-    x = Convolution2D(nb_filter2, kernel_size, kernel_size, border_mode='same',
-                      name=conv_name_base + '2b')(x)
-    x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2b')(x)
+    x = Convolution2D(
+        nb_filter2,
+        kernel_size,
+        kernel_size,
+        border_mode='same',
+        name=f'{conv_name_base}2b',
+    )(x)
+
+    x = BatchNormalization(axis=bn_axis, name=f'{bn_name_base}2b')(x)
     x = Activation('relu')(x)
 
-    x = Convolution2D(nb_filter3, 1, 1, name=conv_name_base + '2c')(x)
-    x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2c')(x)
+    x = Convolution2D(nb_filter3, 1, 1, name=f'{conv_name_base}2c')(x)
+    x = BatchNormalization(axis=bn_axis, name=f'{bn_name_base}2c')(x)
 
-    shortcut = Convolution2D(nb_filter3, 1, 1, subsample=strides,
-                             name=conv_name_base + '1')(input_tensor)
-    shortcut = BatchNormalization(axis=bn_axis, name=bn_name_base + '1')(shortcut)
+    shortcut = Convolution2D(
+        nb_filter3, 1, 1, subsample=strides, name=f'{conv_name_base}1'
+    )(input_tensor)
+
+    shortcut = BatchNormalization(axis=bn_axis, name=f'{bn_name_base}1')(shortcut)
 
     x = merge([x, shortcut], mode='sum')
     x = Activation('relu')(x)
@@ -138,28 +148,19 @@ def ResNet50(include_top=True, weights='imagenet',
                          '(pre-training on ImageNet).')
     # Determine proper input shape
     if K.image_dim_ordering() == 'th':
-        if include_top:
-            input_shape = (3, 224, 224)
-        else:
-            input_shape = (3, None, None)
+        input_shape = (3, 224, 224) if include_top else (3, None, None)
     else:
-        if include_top:
-            input_shape = (224, 224, 3)
-        else:
-            input_shape = (None, None, 3)
-
+        input_shape = (224, 224, 3) if include_top else (None, None, 3)
     if input_tensor is None:
         img_input = Input(shape=input_shape)
     else:
-        if not K.is_keras_tensor(input_tensor):
-            img_input = Input(tensor=input_tensor)
-        else:
-            img_input = input_tensor
-    if K.image_dim_ordering() == 'tf':
-        bn_axis = 3
-    else:
-        bn_axis = 1
+        img_input = (
+            input_tensor
+            if K.is_keras_tensor(input_tensor)
+            else Input(tensor=input_tensor)
+        )
 
+    bn_axis = 3 if K.image_dim_ordering() == 'tf' else 1
     x = ZeroPadding2D((3, 3))(img_input)
     x = Convolution2D(64, 7, 7, subsample=(2, 2), name='conv1')(x)
     x = BatchNormalization(axis=bn_axis, name='bn_conv1')(x)

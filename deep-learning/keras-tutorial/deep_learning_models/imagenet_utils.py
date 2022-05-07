@@ -37,7 +37,4 @@ def decode_predictions(preds):
                          cache_subdir='models')
         CLASS_INDEX = json.load(open(fpath))
     indices = np.argmax(preds, axis=-1)
-    results = []
-    for i in indices:
-        results.append(CLASS_INDEX[str(i)])
-    return results
+    return [CLASS_INDEX[str(i)] for i in indices]

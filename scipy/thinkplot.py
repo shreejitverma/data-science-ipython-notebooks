@@ -184,9 +184,7 @@ def _UnderrideColor(options):
     if 'color' in options:
         return options
 
-    color_iter = _Brewer.GetIter()
-
-    if color_iter:
+    if color_iter := _Brewer.GetIter():
         try:
             options['color'] = next(color_iter)
         except StopIteration:
@@ -380,13 +378,8 @@ def Pmf(pmf, **options):
     lasty = 0
     for x, y in zip(xs, ys):
         if (x - lastx) > 1e-5:
-            points.append((lastx, 0))
-            points.append((x, 0))
-
-        points.append((x, lasty))
-        points.append((x, y))
-        points.append((x+width, y))
-
+            points.extend(((lastx, 0), (x, 0)))
+        points.extend(((x, lasty), (x, y), (x+width, y)))
         lastx = x + width
         lasty = y
     points.append((lastx, 0))
@@ -425,8 +418,7 @@ def Diff(t):
     Returns:
         sequence of differences (length one less than t)
     """
-    diffs = [t[i+1] - t[i] for i in range(len(t)-1)]
-    return diffs
+    return [t[i+1] - t[i] for i in range(len(t)-1)]
 
 
 def Cdf(cdf, complement=False, transform=None, **options):
@@ -605,9 +597,7 @@ def Config(**options):
                 }
 
     global LEGEND
-    LEGEND = options.get('legend', LEGEND)
-
-    if LEGEND:
+    if LEGEND := options.get('legend', LEGEND):
         global LOC
         LOC = options.get('loc', LOC)
         pyplot.legend(loc=LOC)
@@ -679,7 +669,7 @@ def SaveFormat(root, fmt='eps'):
       root: string filename root
       fmt: string format
     """
-    filename = '%s.%s' % (root, fmt)
+    filename = f'{root}.{fmt}'
     print('Writing', filename)
     pyplot.savefig(filename, format=fmt, dpi=300)
 
